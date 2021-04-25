@@ -14,7 +14,6 @@ namespace WebApi.Services
     public interface IUserService
     {
         User Authenticate(string username, string password);
-        IEnumerable<User> GetAll();
         User GetById(int id);
     }
 
@@ -61,11 +60,6 @@ namespace WebApi.Services
             user.Token = tokenHandler.WriteToken(token);
 
             return user;
-        }
-
-        public IEnumerable<User> GetAll()
-        {
-            return _dbContext.Users;
         }
 
         public User GetById(int id) 
