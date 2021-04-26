@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Szkolka.Entity
+namespace SzkolaKomunikator.Entity
 {
     public class User
     {

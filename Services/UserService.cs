@@ -6,7 +6,7 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Szkolka.Entity;
+using SzkolaKomunikator.Entity;
 using WebApi.Helpers;
 
 namespace WebApi.Services
@@ -15,16 +15,11 @@ namespace WebApi.Services
     {
         User Authenticate(string username, string password);
         User GetById(int id);
+        bool Create(User newUser);
     }
 
     public class UserService : IUserService
     {
-        // users hardcoded for simplicity, store in a db with hashed passwords in production applications
-        private List<User> _users = new List<User>
-        { 
-            new User { Id = 1, Nick = "admin", Password = "admin", Role = Role.Admin },
-            new User { Id = 2, Nick = "user", Password = "user", Role = Role.User } 
-        };
 
         private readonly AppSettings _appSettings;
         private readonly CommunicatorDbContext _dbContext;
@@ -66,6 +61,20 @@ namespace WebApi.Services
         {
             var user = _dbContext.Users.FirstOrDefault(x => x.Id == id);
             return user;
+        }
+
+        public bool Create(User newUser)
+        {
+            try
+            {
+                _dbContext.Users.Add(newUser);
+                _dbContext.SaveChanges();
+                return true;
+            }
+            catch(Exception e)
+            {
+                return false;
+            }
         }
     }
 }

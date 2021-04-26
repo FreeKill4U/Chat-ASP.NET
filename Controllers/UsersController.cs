@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Authorization;
 using WebApi.Services;
 using WebApi.Models;
-using Szkolka.Entity;
+using SzkolaKomunikator.Entity;
+using SzkolaKomunikator.Models;
+using AutoMapper;
 
 namespace WebApi.Controllers
 {
@@ -11,16 +13,18 @@ namespace WebApi.Controllers
     [Route("[controller]")]
     public class UsersController : ControllerBase
     {
-        private IUserService _userService;
+        private readonly IUserService _userService;
+        private readonly IMapper _mapper;
 
-        public UsersController(IUserService userService)
+        public UsersController(IUserService userService, IMapper mapper)
         {
             _userService = userService;
+            _mapper = mapper;
         }
 
         [AllowAnonymous]
         [HttpPost("login")]
-        public IActionResult Authenticate([FromBody]AuthenticateModel model)
+        public IActionResult Authenticate([FromBody]AuthenticateDto model)
         {
             var user = _userService.Authenticate(model.Nick, model.Password);
 
@@ -30,15 +34,22 @@ namespace WebApi.Controllers
             return Ok(user);
         }
 
-        [Authorize(Roles = Role.Admin)]
-        [HttpGet]
-        public IActionResult GetAll()
+        [AllowAnonymous]
+        [HttpPost("register")]
+        public IActionResult Register([FromBody] RegisterDto model)
         {
-            var users =  _userService.GetAll();
-            return Ok(users);
+
+            var user = _mapper.Map<User>(model);
+
+            if (user == null)
+                return BadRequest(new { message = "Username or password is incorrect" });
+
+            if(_userService.Create(user))
+                return Ok(user);
+
+            else return BadRequest(new { message = "Something went wrong" });
         }
 
-        [Authorize]
         [HttpGet("Name")]
         public IActionResult GetName()
         {

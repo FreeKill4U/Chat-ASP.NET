@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using Szkolka.Entity;
+using SzkolaKomunikator.Entity;
 
 namespace WebApi.Helpers
 {
