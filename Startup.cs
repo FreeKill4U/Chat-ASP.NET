@@ -9,6 +9,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using SzkolaKomunikator.Entity;
 using SzkolaKomunikator.Services;
+using SzkolaKomunikator.Middleware;
 
 namespace WebApi
 {
@@ -57,12 +58,15 @@ namespace WebApi
             services.AddScoped<IChatService, ChatService>();
             services.AddDbContext<CommunicatorDbContext>();
             services.AddAutoMapper(this.GetType().Assembly);
+            services.AddScoped<ErrorHandlingMiddleware>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseRouting();
+
+            app.UseMiddleware<ErrorHandlingMiddleware>();
 
             // global cors policy
             app.UseCors(x => x

@@ -7,6 +7,7 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using SzkolaKomunikator.Entity;
+using SzkolaKomunikator.Helpers.Exceptions;
 using WebApi.Helpers;
 
 namespace WebApi.Services
@@ -36,7 +37,7 @@ namespace WebApi.Services
 
             // return null if user not found
             if (user == null)
-                return null;
+                throw new NotFoundException("Username or password is incorrect");
 
             // authentication successful so generate jwt token
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -57,24 +58,20 @@ namespace WebApi.Services
             return user;
         }
 
+        public bool Create(User newUser)
+        {
+            _dbContext.Users.Add(newUser);
+            _dbContext.SaveChanges();
+            return true;
+        }
+
+
+
+        //Test
         public User GetById(int id) 
         {
             var user = _dbContext.Users.FirstOrDefault(x => x.Id == id);
             return user;
-        }
-
-        public bool Create(User newUser)
-        {
-            try
-            {
-                _dbContext.Users.Add(newUser);
-                _dbContext.SaveChanges();
-                return true;
-            }
-            catch(Exception e)
-            {
-                return false;
-            }
         }
     }
 }

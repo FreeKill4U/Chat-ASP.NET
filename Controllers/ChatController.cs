@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using SzkolaKomunikator.Entity;
 using SzkolaKomunikator.Models.Chat;
+using SzkolaKomunikator.Models.Chats;
 using SzkolaKomunikator.Services;
 using WebApi.Services;
 
@@ -34,12 +35,39 @@ namespace SzkolaKomunikator.Controllers
         }
 
         [HttpPost("CreateChat")]
-        public IActionResult CreateChat(CreateChatDto model)
+        public IActionResult CreateChat([FromBody]CreateChatDto model)
         {
             var chat = _mapper.Map<Chat>(model);
-            var user = HttpContext.User.Identity.Name;
-            var result = _chatService.Create(chat, int.Parse(user));
-            return Ok(result);
+            var userId = int.Parse(HttpContext.User.Identity.Name);
+            _chatService.Create(chat, userId);
+            return Created("New chat was created!", null);
+        }
+
+        [HttpGet("JoinChat/{chatId}")]
+        public IActionResult JoinChat([FromRoute]int chatId)
+        {
+            var userId = int.Parse(HttpContext.User.Identity.Name);
+            _chatService.Join(chatId, userId);
+            return Ok("You have successfully joined the chat!");
+        }
+
+        [HttpGet("LeaveChat/{chatId}")]
+        public IActionResult LeaveChat([FromRoute] int chatId)
+        {
+            var userId = int.Parse(HttpContext.User.Identity.Name);
+            _chatService.Leave(chatId, userId);
+            return Ok("You have successfully leaved the chat!");
+        }
+
+        [HttpPost("Send/{chatId}")]
+        public IActionResult SendMessege([FromBody] MessegeSendDto model, [FromRoute] int chatId)
+        {
+            var messege = _mapper.Map<Messege>(model);
+            var userId = int.Parse(HttpContext.User.Identity.Name);
+
+            _chatService.SendMessege(messege, chatId, userId);
+
+            return Created("New chat was created!", null);
         }
     }
 }

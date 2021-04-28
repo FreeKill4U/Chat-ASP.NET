@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SzkolaKomunikator.Entity;
 
 namespace SzkolaKomunikator.Migrations
 {
     [DbContext(typeof(CommunicatorDbContext))]
-    partial class CommunicatorDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210427112112_Clear")]
+    partial class Clear
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -58,10 +60,7 @@ namespace SzkolaKomunikator.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int>("AuthorId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ChatId")
+                    b.Property<int>("ChatId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("Date")
@@ -151,7 +150,9 @@ namespace SzkolaKomunikator.Migrations
                 {
                     b.HasOne("SzkolaKomunikator.Entity.Chat", "Chat")
                         .WithMany("Messeges")
-                        .HasForeignKey("ChatId");
+                        .HasForeignKey("ChatId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Chat");
                 });

@@ -5,6 +5,7 @@ using WebApi.Models;
 using SzkolaKomunikator.Entity;
 using SzkolaKomunikator.Models;
 using AutoMapper;
+using SzkolaKomunikator.Helpers.Exceptions;
 
 namespace WebApi.Controllers
 {
@@ -48,6 +49,16 @@ namespace WebApi.Controllers
                 return Ok(user);
 
             else return BadRequest(new { message = "Something went wrong" });
+        }
+
+
+        //Test Action
+
+        [AllowAnonymous]
+        [HttpGet("Exception")]
+        public IActionResult Test()
+        {
+            throw new NotFoundException("Test");
         }
 
         [HttpGet("Name")]
