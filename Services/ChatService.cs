@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 using SzkolaKomunikator.Entity;
 using SzkolaKomunikator.Helpers.Exceptions;
 using SzkolaKomunikator.Models.Chat;
+using SzkolaKomunikator.Models.Chats;
 
 namespace SzkolaKomunikator.Services
 {
@@ -15,15 +17,18 @@ namespace SzkolaKomunikator.Services
         void Join(int chatId, int userId);
         void Leave(int chatId, int userId);
         void SendMessege(Messege messege, int chatId, int userId);
+        IEnumerable<ShowMessegeDto> ShowChat(int chatId, int userId, int part);
     }
 
     public class ChatService : IChatService
     {
         private readonly CommunicatorDbContext _dbContext;
+        private readonly IMapper _mapper;
 
-        public ChatService(CommunicatorDbContext dbContext)
+        public ChatService(CommunicatorDbContext dbContext, IMapper mapper)
         {
             _dbContext = dbContext;
+            _mapper = mapper;
         }
 
         public void Create(Chat chat, int userId)
@@ -85,6 +90,25 @@ namespace SzkolaKomunikator.Services
             _dbContext.SaveChanges();
         }
 
+        public IEnumerable<ShowMessegeDto> ShowChat(int chatId, int userId, int part)
+        {
+            if (!UserInChat(chatId, userId))
+                throw new UnauthorizeException("The user does not belong to a chat!");
+
+            var chat = _dbContext.Chats
+                .Include(r => r.Messeges)
+                .Include(r => r.Users)
+                .FirstOrDefault(a => a.Id == chatId);
+            if (chat == null)
+                throw new NotFoundException("Chat does not exist!");
+
+            var messeges = chat.Messeges.ToList().Skip(50*(part-1)).Take(50);
+
+            var models = _mapper.Map<List<ShowMessegeDto>>(messeges);
+
+            return models;
+        }
+
 
 
 
@@ -106,5 +130,7 @@ namespace SzkolaKomunikator.Services
 
             return true;
         }
+
+        
     }
 }

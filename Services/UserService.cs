@@ -65,6 +65,16 @@ namespace WebApi.Services
             return true;
         }
 
+        //Helper functions
+        public static string GetUserName(int Id)
+        {
+            using (var db = new CommunicatorDbContext())
+            {
+                var user = db.Users
+                .FirstOrDefault(r => r.Id == Id).Nick;
+                return user;
+            }
+        }
 
 
         //Test

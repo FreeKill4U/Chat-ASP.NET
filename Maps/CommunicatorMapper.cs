@@ -7,6 +7,7 @@ using SzkolaKomunikator.Entity;
 using SzkolaKomunikator.Models;
 using SzkolaKomunikator.Models.Chat;
 using SzkolaKomunikator.Models.Chats;
+using WebApi.Services;
 
 namespace SzkolaKomunikator.Helper.Maps
 {
@@ -20,6 +21,10 @@ namespace SzkolaKomunikator.Helper.Maps
                 ForMember(m => m.Name, c => c.MapFrom(s => s.Name));
             CreateMap<MessegeSendDto, Messege>().
                 ForMember(m => m.Text, c => c.MapFrom(s => s.Text));
+
+            CreateMap<Messege, ShowMessegeDto>()
+                .ForMember(m => m.Author, c => c.MapFrom(s => UserService.GetUserName(s.AuthorId)))
+                .ForMember(m => m.ChatId, c => c.MapFrom(s => s.Chat.Id));
         }
     }
 }

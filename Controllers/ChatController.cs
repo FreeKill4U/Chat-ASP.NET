@@ -67,7 +67,15 @@ namespace SzkolaKomunikator.Controllers
 
             _chatService.SendMessege(messege, chatId, userId);
 
-            return Created("New chat was created!", null);
+            return Created("You have successfully send Messege!", null);
+        }
+
+        [HttpPost("ShowChat/{chatId}")]
+        public IActionResult ShowChat([FromRoute] int chatId, [FromQuery] int part)
+        {
+            var userId = int.Parse(HttpContext.User.Identity.Name);
+            var messeges = _chatService.ShowChat(chatId, userId, part);
+            return Ok(messeges);
         }
     }
 }
