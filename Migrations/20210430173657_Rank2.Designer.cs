@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SzkolaKomunikator.Entity;
 
 namespace SzkolaKomunikator.Migrations
 {
     [DbContext(typeof(CommunicatorDbContext))]
-    partial class CommunicatorDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210430173657_Rank2")]
+    partial class Rank2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -32,21 +34,6 @@ namespace SzkolaKomunikator.Migrations
                     b.HasIndex("UsersId");
 
                     b.ToTable("ChatUser");
-                });
-
-            modelBuilder.Entity("RankUser", b =>
-                {
-                    b.Property<int>("RanksId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UsersId")
-                        .HasColumnType("int");
-
-                    b.HasKey("RanksId", "UsersId");
-
-                    b.HasIndex("UsersId");
-
-                    b.ToTable("RankUser");
                 });
 
             modelBuilder.Entity("SzkolaKomunikator.Entity.Chat", b =>
@@ -164,6 +151,9 @@ namespace SzkolaKomunikator.Migrations
                     b.Property<string>("Password")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("RankId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Role")
                         .HasColumnType("nvarchar(max)");
 
@@ -171,6 +161,8 @@ namespace SzkolaKomunikator.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("RankId");
 
                     b.ToTable("Users");
                 });
@@ -180,21 +172,6 @@ namespace SzkolaKomunikator.Migrations
                     b.HasOne("SzkolaKomunikator.Entity.Chat", null)
                         .WithMany()
                         .HasForeignKey("ChatsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SzkolaKomunikator.Entity.User", null)
-                        .WithMany()
-                        .HasForeignKey("UsersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("RankUser", b =>
-                {
-                    b.HasOne("SzkolaKomunikator.Entity.Rank", null)
-                        .WithMany()
-                        .HasForeignKey("RanksId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -223,11 +200,23 @@ namespace SzkolaKomunikator.Migrations
                     b.Navigation("Chat");
                 });
 
+            modelBuilder.Entity("SzkolaKomunikator.Entity.User", b =>
+                {
+                    b.HasOne("SzkolaKomunikator.Entity.Rank", null)
+                        .WithMany("Users")
+                        .HasForeignKey("RankId");
+                });
+
             modelBuilder.Entity("SzkolaKomunikator.Entity.Chat", b =>
                 {
                     b.Navigation("Messeges");
 
                     b.Navigation("Ranks");
+                });
+
+            modelBuilder.Entity("SzkolaKomunikator.Entity.Rank", b =>
+                {
+                    b.Navigation("Users");
                 });
 #pragma warning restore 612, 618
         }

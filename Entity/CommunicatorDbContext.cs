@@ -35,6 +35,10 @@ namespace SzkolaKomunikator.Entity
                 Property(r => r.Text).
                 IsRequired().
                 HasMaxLength(256);
+            modelBuilder.Entity<Rank>().
+                Property(r => r.Name).
+                IsRequired().
+                HasMaxLength(50);
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
