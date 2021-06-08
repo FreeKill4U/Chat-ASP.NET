@@ -30,6 +30,11 @@ namespace SzkolaKomunikator.Middleware
                 context.Response.StatusCode = 401;
                 await context.Response.WriteAsync("No permission: " + e.Message);
             }
+            catch (ThisUserExistsException e)
+            {
+                context.Response.StatusCode = 409;
+                await context.Response.WriteAsync(e.Message);
+            }
             catch (Exception e)
             {
                 context.Response.StatusCode = 500;

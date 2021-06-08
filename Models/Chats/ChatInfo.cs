@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace SzkolaKomunikator.Entity
+namespace SzkolaKomunikator.Models.Chats
 {
-    public class Chat
+    public class ChatInfo
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public virtual List<User> Users { get; set; }
-        public virtual List<Message> Messeges { get; set; }
     }
 }

@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using SzkolaKomunikator.Entity;
 using SzkolaKomunikator.Services;
 using SzkolaKomunikator.Middleware;
+using SzkolaKomunikator.SignalR;
+using Microsoft.AspNet.SignalR;
 
 namespace WebApi
 {
@@ -25,7 +27,13 @@ namespace WebApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCors();
+            services.AddCors(o => o.AddPolicy("CorsPolicy", builder => {
+                builder
+                .WithOrigins("http://localhost:4200")
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
+            }));
             services.AddControllers();
 
             // configure strongly typed settings objects
@@ -59,6 +67,8 @@ namespace WebApi
             services.AddDbContext<CommunicatorDbContext>();
             services.AddAutoMapper(this.GetType().Assembly);
             services.AddScoped<ErrorHandlingMiddleware>();
+            services.AddSignalR();
+            GlobalHost.HubPipeline.RequireAuthentication();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -67,18 +77,17 @@ namespace WebApi
             app.UseRouting();
 
             app.UseMiddleware<ErrorHandlingMiddleware>();
+            //app.UseMiddleware<UserExistsMiddleware>();
 
             // global cors policy
-            app.UseCors(x => x
-                .AllowAnyOrigin()
-                .AllowAnyMethod()
-                .AllowAnyHeader());
+            app.UseCors("CorsPolicy");
 
             app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapHub<MessageHub>("/notify");
                 endpoints.MapControllers();
             });
         }

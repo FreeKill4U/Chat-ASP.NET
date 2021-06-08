@@ -16,7 +16,10 @@ namespace WebApi.Services
     {
         User Authenticate(string username, string password);
         User GetById(int id);
+        User GetByNick(string nick);
         bool Create(User newUser);
+
+        bool AuthFirst(string token);
     }
 
     public class UserService : IUserService
@@ -46,19 +49,29 @@ namespace WebApi.Services
             {
                 Subject = new ClaimsIdentity(new Claim[] 
                 {
-                    new Claim(ClaimTypes.Name, user.Id.ToString()),
-                    new Claim(ClaimTypes.Role, user.Role)
+                    new Claim(ClaimTypes.Name, user.Id.ToString())
                 }),
-                Expires = DateTime.UtcNow.AddDays(7),
+                Expires = DateTime.UtcNow.AddDays(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
             user.Token = tokenHandler.WriteToken(token);
 
+            _dbContext.SaveChanges();
+
+
             return user;
         }
 
         public bool Create(User newUser)
+        {
+            
+            _dbContext.Users.Add(newUser);
+            _dbContext.SaveChanges();
+            return true;
+        }
+
+        public bool Remove(User newUser)
         {
             _dbContext.Users.Add(newUser);
             _dbContext.SaveChanges();
@@ -76,12 +89,22 @@ namespace WebApi.Services
             }
         }
 
-
-        //Test
         public User GetById(int id) 
         {
             var user = _dbContext.Users.FirstOrDefault(x => x.Id == id);
             return user;
+        }
+        public User GetByNick(string nick)
+        {
+            var user = _dbContext.Users.FirstOrDefault(x => x.Nick == nick);
+            return user;
+        }
+
+        public bool AuthFirst(string id)
+        {
+            if (_dbContext.Users.FirstOrDefault(x => x.Id == int.Parse(id)) != null)
+                return true;
+            else return false;
         }
     }
 }

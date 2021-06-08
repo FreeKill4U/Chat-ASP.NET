@@ -1,17 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace SzkolaKomunikator.Entity
+namespace SzkolaKomunikator.Models.User
 {
-    public class User
+    public class ReturnUserDto
     {
         public int Id { get; set; }
         public string Nick { get; set; }
-        public string Password { get; set; }
-        public virtual List<Chat> Chats { get; set; }
         public string Token { get; set; }
     }
 }

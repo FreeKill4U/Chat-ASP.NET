@@ -14,8 +14,7 @@ namespace SzkolaKomunikator.Entity
 
         public DbSet<User> Users { get; set; }
         public DbSet<Chat> Chats { get; set; }
-        public DbSet<Messege> Messeges { get; set; }
-        public DbSet<Rank> Ranks { get; set; }
+        public DbSet<Message> Messeges { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -23,22 +22,17 @@ namespace SzkolaKomunikator.Entity
                 Property(r => r.Nick).
                 IsRequired().
                 HasMaxLength(25);
+            modelBuilder.Entity<User>().
+                HasIndex(r => r.Nick).
+                IsUnique();
             modelBuilder.Entity<Chat>().
                 Property(r => r.Name).
                 IsRequired().
                 HasMaxLength(50);
-            modelBuilder.Entity<Rank>().
-                Property(r => r.Name).
-                IsRequired().
-                HasMaxLength(25);
-            modelBuilder.Entity<Messege>().
+            modelBuilder.Entity<Message>().
                 Property(r => r.Text).
                 IsRequired().
                 HasMaxLength(256);
-            modelBuilder.Entity<Rank>().
-                Property(r => r.Name).
-                IsRequired().
-                HasMaxLength(50);
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

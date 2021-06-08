@@ -13,11 +13,15 @@ namespace SzkolaKomunikator.Services
 {
     public interface IChatService
     {
+        IEnumerable<Chat> GetAllChats(int userId);
+
         void Create(Chat chat, int userId);
         void Join(int chatId, int userId);
         void Leave(int chatId, int userId);
-        void SendMessege(Messege messege, int chatId, int userId);
-        IEnumerable<ShowMessegeDto> ShowChat(int chatId, int userId, int part);
+        void SendMessege(Message messege, int chatId, int userId);
+        IEnumerable<ShowMessageDto> ShowChat(int chatId, int userId, int part);
+
+        bool UserInChat(int chatId, int userId);
     }
 
     public class ChatService : IChatService
@@ -31,6 +35,17 @@ namespace SzkolaKomunikator.Services
             _mapper = mapper;
         }
 
+        public IEnumerable<Chat> GetAllChats(int userId)
+        {
+            var chats = _dbContext.Chats
+                .Include(r => r.Users)
+                .Where(r => r.Users
+                .FirstOrDefault(u => u.Id == userId).Id == userId)
+                .ToList();
+
+            return chats;
+        }
+
         public void Create(Chat chat, int userId)
         {
             
@@ -38,33 +53,8 @@ namespace SzkolaKomunikator.Services
             if (user == null)
                 throw new IncorrectDataException("User not exist");
 
-            chat.Ranks = new List<Rank>()
-            {
-                new Rank()
-                {
-                Name = "Admin",
-                Color = "#f1c40f",
-                SendMessege = true,
-                SendPhoto = true,
-                AddUser = true,
-                RemoveUser = true,
-                GiveRank = true,
-                IsAdmin = true,
-                NewUser = false,
-                Mention = true,
-                ColorText = true,
-                Reaction = true,
-                },
-                new Rank()
-                {
-                Name = "User",
-                Color = "#7090ff",
-                }
-            };
-
             chat.Users = new List<User> { user };
 
-            chat.Ranks.FirstOrDefault(r => r.Name == "Admin").Users = new List<User>() { user};
 
             _dbContext.Chats.Add(chat);
             _dbContext.SaveChanges();
@@ -73,7 +63,6 @@ namespace SzkolaKomunikator.Services
         public void Join(int chatId, int userId)
         {
             var chat = _dbContext.Chats
-                .Include(r => r.Ranks)
                 .Include(r => r.Users)
                 .FirstOrDefault(r => r.Id == chatId);
             if (chat == null)
@@ -83,24 +72,25 @@ namespace SzkolaKomunikator.Services
             if (user == null)
                 throw new IncorrectDataException("User not exist");
 
-            
 
-            chat.Users = new List<User> { user };
 
-            chat.Ranks.FirstOrDefault(r => r.NewUser == true).Users = new List<User> { user };
+            chat.Users.Add(user);
+
 
             _dbContext.SaveChanges();
         }
 
         public void Leave(int chatId, int userId)
         {
+            if (!UserInChat(chatId, userId))
+                throw new UnauthorizeException("The user does not belong to a chat!");
+
             var chat = _dbContext.Chats
                 .Include(r => r.Users)
-                .Include(r => r.Ranks)
                 .FirstOrDefault(a => a.Id == chatId);
 
-            chat.Ranks.Remove(_dbContext.Ranks
-                .FirstOrDefault(r => r.Users.Any(u => u.Id == userId) && r.Chat.Id == chatId));
+            if (chat == null)
+                throw new NotFoundException("Chat does not exist!");
 
             var data = chat.Users;
 
@@ -109,7 +99,7 @@ namespace SzkolaKomunikator.Services
             _dbContext.SaveChanges();
         }
 
-        public void SendMessege(Messege messege, int chatId, int userId)
+        public void SendMessege(Message messege, int chatId, int userId)
         {
             if (!UserInChat(chatId, userId))
                 throw new UnauthorizeException("The user does not belong to a chat!");
@@ -130,7 +120,7 @@ namespace SzkolaKomunikator.Services
             _dbContext.SaveChanges();
         }
 
-        public IEnumerable<ShowMessegeDto> ShowChat(int chatId, int userId, int part)
+        public IEnumerable<ShowMessageDto> ShowChat(int chatId, int userId, int part)
         {
             if (!UserInChat(chatId, userId))
                 throw new UnauthorizeException("The user does not belong to a chat!");
@@ -138,12 +128,8 @@ namespace SzkolaKomunikator.Services
             var chat = _dbContext.Chats
                 .Include(r => r.Messeges)
                 .Include(r => r.Users)
-                .Include(r => r.Ranks)
                 .FirstOrDefault(a => a.Id == chatId);
 
-            List<Rank> ranks = _dbContext.Ranks
-                .Include(r => r.Users)
-                .Where(r => r.Chat.Id == chatId).ToList();
             if (chat == null)
                 throw new NotFoundException("Chat does not exist!");
 
@@ -152,12 +138,7 @@ namespace SzkolaKomunikator.Services
                 .Skip(50*(part-1))
                 .Take(50);
 
-            var models = _mapper.Map<List<ShowMessegeDto>>(messeges);
-
-            foreach(var x in models)
-            {
-                x.ColorAuth = ranks.FirstOrDefault(r => r.Users.Any(u => u.Nick == x.Author) && r.Chat.Id == chatId).Color;
-            }
+            var models = _mapper.Map<List<ShowMessageDto>>(messeges);
 
             return models;
         }
@@ -175,7 +156,7 @@ namespace SzkolaKomunikator.Services
             return result;
         }
 
-        private bool UserInChat(int chatId, int userId)
+        public bool UserInChat(int chatId, int userId)
         {
             var chat = _dbContext.Chats.Include(r => r.Users).FirstOrDefault(r => r.Id == chatId);
             if (chat == null)

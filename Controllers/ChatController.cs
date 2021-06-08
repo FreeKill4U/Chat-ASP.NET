@@ -20,49 +20,71 @@ namespace SzkolaKomunikator.Controllers
     {
         private readonly IChatService _chatService;
         private readonly IMapper _mapper;
+        private readonly IUserService _userService;
 
-        public ChatController(IChatService userService, IMapper mapper)
+        public ChatController(IChatService chatService, IMapper mapper, IUserService userService)
         {
-            _chatService = userService;
+            _chatService = chatService;
             _mapper = mapper;
+            _userService = userService;
         }
 
-        [HttpGet]
-        public IActionResult GetName()
-        {
-            var user = HttpContext.User.Identity.Name;
-            return Ok(user);
-        }
+        
 
         [HttpPost("CreateChat")]
         public IActionResult CreateChat([FromBody]CreateChatDto model)
         {
+            if (!_userService.AuthFirst(User.Identity.Name))
+                return Unauthorized("Session lost!");
             var chat = _mapper.Map<Chat>(model);
             var userId = int.Parse(HttpContext.User.Identity.Name);
             _chatService.Create(chat, userId);
             return Created("New chat was created!", null);
         }
 
-        [HttpGet("JoinChat/{chatId}")]
-        public IActionResult JoinChat([FromRoute]int chatId)
+        [HttpPost("AddUser")]
+        public IActionResult AddUser([FromBody]AddUserDto addUser)
         {
+            if (!_userService.AuthFirst(User.Identity.Name))
+                return Unauthorized("Session lost!");
             var userId = int.Parse(HttpContext.User.Identity.Name);
-            _chatService.Join(chatId, userId);
+            if (!_chatService.UserInChat(addUser.ChatId, userId))
+                return Unauthorized("You don't belong to this chat!");
+            _chatService.Join(addUser.ChatId, _userService.GetByNick(addUser.UserNick).Id);
             return Ok("You have successfully joined the chat!");
         }
 
-        [HttpGet("LeaveChat/{chatId}")]
+        [HttpGet("GetMyChats")]
+        public IActionResult GetMyChat()
+        {
+            if (!_userService.AuthFirst(User.Identity.Name))
+                return Unauthorized("Session lost!");
+
+            var userId = int.Parse(HttpContext.User.Identity.Name);
+
+            var chats = _chatService.GetAllChats(userId);
+
+            var models = _mapper.Map<List<ChatInfo>>(chats);
+
+            return Ok(models);
+        }
+
+        [HttpPost("LeaveChat/{chatId}")]
         public IActionResult LeaveChat([FromRoute] int chatId)
         {
+            if (!_userService.AuthFirst(User.Identity.Name))
+                return Unauthorized("Session lost!");
             var userId = int.Parse(HttpContext.User.Identity.Name);
             _chatService.Leave(chatId, userId);
             return Ok("You have successfully leaved the chat!");
         }
 
         [HttpPost("Send/{chatId}")]
-        public IActionResult SendMessege([FromBody] MessegeSendDto model, [FromRoute] int chatId)
+        public IActionResult SendMessege([FromBody] MessageSendDto model, [FromRoute] int chatId)
         {
-            var messege = _mapper.Map<Messege>(model);
+            if (!_userService.AuthFirst(User.Identity.Name))
+                return Unauthorized("Session lost!");
+            var messege = _mapper.Map<Message>(model);
             var userId = int.Parse(HttpContext.User.Identity.Name);
 
             _chatService.SendMessege(messege, chatId, userId);
@@ -73,9 +95,24 @@ namespace SzkolaKomunikator.Controllers
         [HttpPost("ShowChat/{chatId}")]
         public IActionResult ShowChat([FromRoute] int chatId, [FromQuery] int part)
         {
+            if (!_userService.AuthFirst(User.Identity.Name))
+                return Unauthorized("Session lost!");
             var userId = int.Parse(HttpContext.User.Identity.Name);
             var messeges = _chatService.ShowChat(chatId, userId, part);
             return Ok(messeges);
+        }
+
+        
+
+
+        //Helper
+        [HttpGet]
+        public IActionResult GetName()
+        {
+            if (!_userService.AuthFirst(User.Identity.Name))
+                return Unauthorized("Session lost!");
+            var user = HttpContext.User.Identity.Name;
+            return Ok(user);
         }
     }
 }

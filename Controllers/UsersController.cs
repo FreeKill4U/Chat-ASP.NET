@@ -6,6 +6,8 @@ using SzkolaKomunikator.Entity;
 using SzkolaKomunikator.Models;
 using AutoMapper;
 using SzkolaKomunikator.Helpers.Exceptions;
+using Microsoft.Net.Http.Headers;
+using SzkolaKomunikator.Models.User;
 
 namespace WebApi.Controllers
 {
@@ -27,28 +29,38 @@ namespace WebApi.Controllers
         [HttpPost("login")]
         public IActionResult Authenticate([FromBody]AuthenticateDto model)
         {
+            if (model == null || model.Nick == "")
+                return BadRequest("Username or password is incorrect");
+
             var user = _userService.Authenticate(model.Nick, model.Password);
 
-            if (user == null)
-                return BadRequest(new { message = "Username or password is incorrect" });
+            var modelRequest = _mapper.Map<ReturnUserDto>(user);
 
-            return Ok(user);
+            if (user == null)
+                return BadRequest("Username or password is incorrect");
+
+            return Ok(modelRequest);
         }
 
         [AllowAnonymous]
-        [HttpPost("register")]
+        [HttpPost("Register")]
         public IActionResult Register([FromBody] RegisterDto model)
         {
 
             var user = _mapper.Map<User>(model);
 
+            if (_userService.GetByNick(model.Nick) != null)
+                throw new ThisUserExistsException("User with this nick exist!");
+
             if (user == null)
-                return BadRequest(new { message = "Username or password is incorrect" });
+                return BadRequest("Username or password is incorrect");
 
-            if(_userService.Create(user))
-                return Ok(user);
+            var modelRequest = _mapper.Map<ReturnUserDto>(user);
 
-            else return BadRequest(new { message = "Something went wrong" });
+            if (_userService.Create(user))
+                return Ok(modelRequest);
+
+            else return BadRequest("Something went wrong");
         }
 
 
@@ -61,27 +73,66 @@ namespace WebApi.Controllers
             throw new NotFoundException("Test");
         }
 
-        [HttpGet("Name")]
-        public IActionResult GetName()
-        {
-            var user = HttpContext.User.Identity.Name;
-            return Ok(user);
-        }
 
-        [HttpGet("{id}")]
-        public IActionResult GetById(int id)
-        {
-            // only allow admins to access other user records
-            var currentUserId = int.Parse(User.Identity.Name);
-            if (id != currentUserId && !User.IsInRole(Role.Admin))
-                return Forbid();
 
-            var user =  _userService.GetById(id);
+        
+
+        //Helper function
+        [HttpGet]
+        public IActionResult GetById()
+        {
+            if (!_userService.AuthFirst(User.Identity.Name))
+                return Unauthorized("Session lost!");
+            var currentUserId = getAuthorizeId();
+
+            var user =  _userService.GetById(currentUserId);
 
             if (user == null)
                 return NotFound();
 
             return Ok(user);
+        }
+
+
+        [HttpGet("Name")]
+        public IActionResult GetName()
+        {
+            if (!_userService.AuthFirst(User.Identity.Name))
+                return Unauthorized("Session lost!");
+            var user = _userService.GetById(int.Parse(HttpContext.User.Identity.Name));
+            var modelRequest = _mapper.Map<ReturnUserDto>(user);
+            return Ok(user);
+        }
+        private int getAuthorizeId()
+        {
+            return int.Parse(User.Identity.Name);
+        }
+
+        [HttpGet("SendToken")]
+        public IActionResult SendToken()
+        {
+            if (!_userService.AuthFirst(User.Identity.Name))
+                return Unauthorized("Session lost!");
+            return Ok(new Message()
+            {
+                Text = "Siema"
+            });
+        }
+
+        [HttpGet("CheckToken")]
+        public IActionResult CheckToken()
+        {
+            if (!_userService.AuthFirst(User.Identity.Name))
+                return Unauthorized("Session lost!");
+            return Ok();
+        }
+
+        [HttpGet("Auth")]
+        public IActionResult authTest()
+        {
+            if (!_userService.AuthFirst(User.Identity.Name))
+                return Unauthorized("Session lost!");
+            return Ok(User.Identity.Name);
         }
     }
 }
