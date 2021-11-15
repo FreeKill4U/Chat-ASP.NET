@@ -29,6 +29,8 @@ namespace WebApi.Controllers
         [HttpPost("login")]
         public IActionResult Authenticate([FromBody]AuthenticateDto model)
         {
+            var remoteIpAddress = HttpContext.Connection.RemoteIpAddress;
+            System.Console.WriteLine(remoteIpAddress);
             if (model == null || model.Nick == "")
                 return BadRequest("Username or password is incorrect");
 
@@ -57,6 +59,7 @@ namespace WebApi.Controllers
 
             var modelRequest = _mapper.Map<ReturnUserDto>(user);
 
+
             if (_userService.Create(user))
                 return Ok(modelRequest);
 
@@ -83,7 +86,7 @@ namespace WebApi.Controllers
         {
             if (!_userService.AuthFirst(User.Identity.Name))
                 return Unauthorized("Session lost!");
-            var currentUserId = getAuthorizeId();
+            var currentUserId = GetAuthorizeId();
 
             var user =  _userService.GetById(currentUserId);
 
@@ -93,6 +96,13 @@ namespace WebApi.Controllers
             return Ok(user);
         }
 
+        [AllowAnonymous]
+        [HttpGet("Connection")]
+        public IActionResult Connection()
+        {
+            return Ok("Jebać kornela");
+        }
+
 
         [HttpGet("Name")]
         public IActionResult GetName()
@@ -100,10 +110,10 @@ namespace WebApi.Controllers
             if (!_userService.AuthFirst(User.Identity.Name))
                 return Unauthorized("Session lost!");
             var user = _userService.GetById(int.Parse(HttpContext.User.Identity.Name));
-            var modelRequest = _mapper.Map<ReturnUserDto>(user);
+            //var modelRequest = _mapper.Map<ReturnUserDto>(user);
             return Ok(user);
         }
-        private int getAuthorizeId()
+        private int GetAuthorizeId()
         {
             return int.Parse(User.Identity.Name);
         }
@@ -128,7 +138,7 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("Auth")]
-        public IActionResult authTest()
+        public IActionResult AuthTest()
         {
             if (!_userService.AuthFirst(User.Identity.Name))
                 return Unauthorized("Session lost!");

@@ -20,6 +20,8 @@ namespace SzkolaKomunikator.Helper.Maps
                 ForMember(m => m.Nick, c => c.MapFrom(s => s.Nick));
             CreateMap<User, ReturnUserDto>().
                 ForMember(m => m.Nick, c => c.MapFrom(s => s.Nick));
+            CreateMap<User, UserInfoDto>().
+                ForMember(m => m.Nick, c => c.MapFrom(s => s.Nick));
 
 
             CreateMap<CreateChatDto, Chat>().

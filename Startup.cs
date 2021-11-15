@@ -12,6 +12,7 @@ using SzkolaKomunikator.Services;
 using SzkolaKomunikator.Middleware;
 using SzkolaKomunikator.SignalR;
 using Microsoft.AspNet.SignalR;
+using SzkolaKomunikator.Controllers;
 
 namespace WebApi
 {
@@ -29,7 +30,7 @@ namespace WebApi
         {
             services.AddCors(o => o.AddPolicy("CorsPolicy", builder => {
                 builder
-                .WithOrigins("http://localhost:4200")
+                .SetIsOriginAllowed(origin => true)
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .AllowCredentials();
@@ -87,7 +88,7 @@ namespace WebApi
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapHub<MessageHub>("/notify");
+                endpoints.MapHub<BroadcastController>("/notify");
                 endpoints.MapControllers();
             });
         }

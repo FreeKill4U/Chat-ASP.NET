@@ -13,5 +13,8 @@ namespace SzkolaKomunikator.Entity
         public string Password { get; set; }
         public virtual List<Chat> Chats { get; set; }
         public string Token { get; set; }
+        public string Color { get; set; }
+        public int Icon { get; set; }
+        public string IconColor { get; set; }
     }
 }

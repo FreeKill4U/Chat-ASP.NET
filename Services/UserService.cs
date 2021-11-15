@@ -65,7 +65,8 @@ namespace WebApi.Services
 
         public bool Create(User newUser)
         {
-            
+            newUser.Color = "#3ad192";
+            newUser.Icon = 1;
             _dbContext.Users.Add(newUser);
             _dbContext.SaveChanges();
             return true;

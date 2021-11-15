@@ -8,6 +8,7 @@ using SzkolaKomunikator.Entity;
 using SzkolaKomunikator.Helpers.Exceptions;
 using SzkolaKomunikator.Models.Chat;
 using SzkolaKomunikator.Models.Chats;
+using SzkolaKomunikator.Models.User;
 
 namespace SzkolaKomunikator.Services
 {
@@ -20,6 +21,7 @@ namespace SzkolaKomunikator.Services
         void Leave(int chatId, int userId);
         void SendMessege(Message messege, int chatId, int userId);
         IEnumerable<ShowMessageDto> ShowChat(int chatId, int userId, int part);
+        IEnumerable<UserInfoDto> GetUsers(int chat);
 
         bool UserInChat(int chatId, int userId);
     }
@@ -54,6 +56,8 @@ namespace SzkolaKomunikator.Services
                 throw new IncorrectDataException("User not exist");
 
             chat.Users = new List<User> { user };
+            chat.Color = "#3ad192";
+            chat.Icon = 1;
 
 
             _dbContext.Chats.Add(chat);
@@ -118,6 +122,15 @@ namespace SzkolaKomunikator.Services
             chat.Messeges.Add(messege);
 
             _dbContext.SaveChanges();
+        }
+
+        public IEnumerable<UserInfoDto> GetUsers(int chat)
+        {
+            var users = _dbContext.Users
+                .Include(r => r.Chats)
+                .Where(r => r.Chats.FirstOrDefault(a => a.Id == chat).Id == chat);
+            var models = _mapper.Map<List<UserInfoDto>>(users);
+            return models;
         }
 
         public IEnumerable<ShowMessageDto> ShowChat(int chatId, int userId, int part)

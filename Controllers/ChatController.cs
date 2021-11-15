@@ -102,7 +102,26 @@ namespace SzkolaKomunikator.Controllers
             return Ok(messeges);
         }
 
-        
+        [HttpGet("GetUsers/{chatId}")]
+        public IActionResult GetUsers([FromRoute] int chatId)
+        {
+            if (!_userService.AuthFirst(User.Identity.Name))
+                return Unauthorized("Session lost!");
+            if (!_chatService.UserInChat(chatId, int.Parse(HttpContext.User.Identity.Name)))
+                return Unauthorized("You don't belong to this chat!");
+            var models = _chatService.GetUsers(chatId);
+            return Ok(models);
+        }
+
+        [HttpPost("EditChat/{chatId}")]
+        public IActionResult EditChat([FromRoute] int chatId, [FromQuery] int part)
+        {
+            if (!_userService.AuthFirst(User.Identity.Name))
+                return Unauthorized("Session lost!");
+            var userId = int.Parse(HttpContext.User.Identity.Name);
+            var messeges = _chatService.ShowChat(chatId, userId, part);
+            return Ok(messeges);
+        }
 
 
         //Helper

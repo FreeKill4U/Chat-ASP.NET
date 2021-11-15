@@ -9,5 +9,7 @@ namespace SzkolaKomunikator.Models.Chat
     public class CreateChatDto
     {
         public string Name { get; set; }
+        public int Icon { get; set; }
+        public string Color { get; set; }
     }
 }
